@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>司法試験 復習リンク ジェネレーター</title>
+<style>
+  :root{
+    --bg:#f7f5ef; --panel:#fffdf8; --ink:#2b2b2b; --muted:#6b6b6b;
+    --line:#e5e0d5; --accent:#b5651d; --accent-ink:#fff;
+    --ok:#2e7d32; --chip:#efe9dc; --link:#1a56c4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1c1b19; --panel:#26241f; --ink:#eceae4; --muted:#a8a396;
+      --line:#3a372f; --accent:#d98c3f; --accent-ink:#1c1b19;
+      --ok:#7bc47f; --chip:#33302a; --link:#7aa7ff;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    line-height:1.6;padding:16px}
+  .wrap{max-width:820px;margin:0 auto}
+  h1{font-size:1.35rem;margin:.2em 0 .1em}
+  .sub{color:var(--muted);font-size:.9rem;margin:0 0 1.2em}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin:0 0 16px}
+  label{display:block;font-weight:600;font-size:.9rem;margin:.6em 0 .3em}
+  input[type=text],textarea{width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;background:var(--bg);color:var(--ink);font-size:1rem;font-family:inherit}
+  textarea{min-height:150px;resize:vertical}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1 1 auto}
+  .hint{color:var(--muted);font-size:.82rem;margin:.3em 0 0}
+  button{cursor:pointer;border:none;border-radius:10px;padding:11px 16px;
+    font-size:.95rem;font-weight:600;font-family:inherit}
+  .primary{background:var(--accent);color:var(--accent-ink)}
+  .ghost{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px}
+  .result{border-top:1px solid var(--line);padding:12px 0;display:flex;gap:10px;
+    align-items:flex-start;flex-wrap:wrap}
+  .result:first-child{border-top:none}
+  .kw{font-weight:700;flex:1 1 200px;min-width:0;word-break:break-word}
+  .lk{flex:1 1 100%;font-size:.8rem;color:var(--muted);word-break:break-all;
+    background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:6px 8px}
+  .acts{display:flex;gap:8px;flex:0 0 auto}
+  .acts a,.acts button{font-size:.82rem;padding:7px 12px}
+  a.open{background:var(--chip);color:var(--link);text-decoration:none;
+    border:1px solid var(--line);border-radius:10px;font-weight:600;display:inline-block}
+  .copied{color:var(--ok)!important}
+  details{margin:0 0 16px}
+  summary{cursor:pointer;font-weight:600;padding:6px 0}
+  .tabbar{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+  .tab{background:var(--chip);border:1px solid var(--line);border-radius:999px;
+    padding:8px 16px;font-size:.88rem;font-weight:600;cursor:pointer;color:var(--muted)}
+  .tab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .pane{display:none}
+  .pane.on{display:block}
+  code{background:var(--chip);padding:1px 6px;border-radius:6px;font-size:.85em}
+  ul{padding-left:1.2em}
+  li{margin:.3em 0}
+  .count{color:var(--muted);font-size:.85rem;margin:.6em 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📚 司法試験 復習リンク ジェネレーター</h1>
+  <p class="sub">リマインダーのタイトル（復習トピック）を貼るだけで、<b>ファイルを移動・削除しても切れない</b>・<b>押した瞬間にキーワードへ直行する</b> Obsidian リンクを量産します。iPad のブラウザでオフラインでも動きます。</p>
+
+  <div class="card">
+    <label for="vault">Vault 名</label>
+    <input type="text" id="vault" value="Time based-司法試験予備試験">
+    <p class="hint">Obsidian のファイルエクスプローラ下部に出ている vault 名。ふつうは変更不要です。</p>
+
+    <label for="scope">フォルダーで絞り込む（任意）</label>
+    <input type="text" id="scope" placeholder="例: 20study または 20_study（空なら vault 全体を検索）">
+    <p class="hint">入力すると検索に <code>path:"…"</code> が付き、そのフォルダー内だけから関連ノートを出します。「20study フォルダーから関連を出したい」ならここにフォルダー名を入れてください。</p>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab on" data-tab="kw">① キーワードから作る</div>
+    <div class="tab" data-tab="fix">② 切れた古いリンクを直す</div>
+  </div>
+
+  <!-- Pane 1: keywords -->
+  <div class="pane on" id="pane-kw">
+    <div class="card">
+      <label for="kwin">復習トピック（1行に1つ）</label>
+      <textarea id="kwin" placeholder="第三者保管の要件
+無報酬受寄者の解除権
+転貸の許容性
+捜索差押令状
+鑑定処分許可"></textarea>
+      <p class="hint">リマインダーのタイトルをそのまま貼るのが最速です。「（3日後）」などの後ろの注記は自動で外します。</p>
+      <div class="toolbar">
+        <button class="primary" id="genKw">検索リンクを生成</button>
+        <button class="ghost" id="clrKw">クリア</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pane 2: fix old links -->
+  <div class="pane" id="pane-fix">
+    <div class="card">
+      <label for="fixin">古い <code>obsidian://open?…&file=…</code> リンク（1行に1つ）</label>
+      <textarea id="fixin" placeholder="obsidian://open?vault=Time%20based-...&file=TimeBase/10_Daily%20Log/2026-07-07%E6%B0%91%E6%B3%95/..."></textarea>
+      <p class="hint">切れたパス直リンクを貼ると、ファイル名を取り出して「切れない検索リンク」に変換します。</p>
+      <div class="toolbar">
+        <button class="primary" id="genFix">検索リンクに変換</button>
+        <button class="ghost" id="clrFix">クリア</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="out" style="display:none">
+    <div class="row" style="justify-content:space-between">
+      <b>生成結果</b>
+      <button class="ghost" id="copyAll" style="flex:0 0 auto">全部コピー（リンクのみ）</button>
+    </div>
+    <p class="count" id="count"></p>
+    <div id="list"></div>
+  </div>
+
+  <details>
+    <summary>なぜ切れる？ / 使い方のコツ</summary>
+    <ul>
+      <li><b>切れる原因：</b> いまのリンクは <code>&file=フルパス</code> でノートを指しています。ファイルを移動・リネーム・削除するとパスが変わり「見つかりません」になります。</li>
+      <li><b>この直し方：</b> <code>obsidian://search?query=キーワード</code> は<b>パスではなく全文検索</b>なので、ファイルが動いても切れません。押した瞬間に vault 全体（20study 含む）から一致ノートが一覧で出るので、<b>スクロールして探す手間が消えます</b>。</li>
+      <li><b>リマインダーへの貼り方：</b> 各行の「コピー」でリンクを取り、リマインダーの本文（URL欄）に貼り付け。タップで Obsidian の検索が開きます。</li>
+      <li><b>もっとピンポイントに飛びたい：</b> Obsidian 側でトピックの見出しを付け、検索結果から見出し行をタップすればその位置に着地します。見出しを付ける運用にすると精度が上がります。</li>
+      <li><b>関連ノートをまとめて見たい：</b> 上の「フォルダーで絞り込む」に <code>20study</code> を入れると、そのフォルダー内の関連だけを一覧できます。</li>
+    </ul>
+  </details>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var vault=function(){return $('#vault').value.trim()};
+  var scope=function(){return $('#scope').value.trim()};
+
+  // build obsidian search URI (robust, path-independent)
+  function buildLink(keyword){
+    var q=keyword;
+    var sc=scope();
+    if(sc){ q='path:"'+sc+'" '+keyword; }
+    return 'obsidian://search?vault='+encodeURIComponent(vault())
+         +'&query='+encodeURIComponent(q);
+  }
+
+  // strip trailing annotations like "（3日後）" "(7日後)" and leading list markers
+  function cleanKeyword(line){
+    return line
+      .replace(/^[\s\-–—・•\d\.\)）]+/,'')          // leading bullets/numbers
+      .replace(/[（(【\[][^）)】\]]*(日後|後|復習|予定)[^）)】\]]*[）)】\]]\s*$/,'') // trailing notes
+      .replace(/\s+$/,'')
+      .trim();
+  }
+
+  // extract a search keyword from an old obsidian://open link
+  function keywordFromLink(line){
+    line=line.trim();
+    var m=line.match(/[?&]file=([^&]+)/);
+    if(!m) return null;
+    var path;
+    try{ path=decodeURIComponent(m[1]); }catch(e){ path=m[1]; }
+    var seg=path.split('/').filter(Boolean);
+    var last=seg[seg.length-1]||path;
+    // note titles can be noisy (e.g. "朝②"); fall back to the parent folder if short
+    if(last.length<=3 && seg.length>=2){ last=seg[seg.length-2]; }
+    return last.replace(/\.md$/,'').trim();
+  }
+
+  function render(items){
+    var list=$('#list'); list.innerHTML='';
+    var valid=0;
+    items.forEach(function(it){
+      var row=document.createElement('div'); row.className='result';
+      var kw=document.createElement('div'); kw.className='kw'; kw.textContent=it.kw||'(空)';
+      var acts=document.createElement('div'); acts.className='acts';
+      if(it.link){
+        valid++;
+        var open=document.createElement('a'); open.className='open';
+        open.href=it.link; open.textContent='開く'; open.rel='noopener';
+        var copy=document.createElement('button'); copy.className='ghost';
+        copy.textContent='コピー';
+        copy.onclick=function(){ copyText(it.link, copy); };
+        acts.appendChild(open); acts.appendChild(copy);
+      }
+      var lk=document.createElement('div'); lk.className='lk';
+      lk.textContent=it.link||'キーワードを取り出せませんでした';
+      row.appendChild(kw); row.appendChild(acts); row.appendChild(lk);
+      list.appendChild(row);
+    });
+    $('#count').textContent=valid+' 件のリンクを生成しました';
+    $('#out').style.display='block';
+    $('#out').scrollIntoView({behavior:'smooth',block:'nearest'});
+    window._links=items.filter(function(i){return i.link}).map(function(i){return i.link});
+  }
+
+  function copyText(t,btn){
+    var done=function(){ if(btn){var o=btn.textContent;btn.textContent='コピー済';btn.classList.add('copied');
+      setTimeout(function(){btn.textContent=o;btn.classList.remove('copied')},1200);} };
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(done,function(){fallback(t);done();});
+    }else{fallback(t);done();}
+  }
+  function fallback(t){
+    var ta=document.createElement('textarea'); ta.value=t;
+    ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+    ta.select(); try{document.execCommand('copy')}catch(e){} document.body.removeChild(ta);
+  }
+
+  $('#genKw').onclick=function(){
+    var lines=$('#kwin').value.split('\n').map(function(l){return l.trim()}).filter(Boolean);
+    render(lines.map(function(l){var k=cleanKeyword(l);return {kw:k,link:k?buildLink(k):null};}));
+  };
+  $('#genFix').onclick=function(){
+    var lines=$('#fixin').value.split('\n').map(function(l){return l.trim()}).filter(Boolean);
+    render(lines.map(function(l){var k=keywordFromLink(l);return {kw:k,link:k?buildLink(k):null};}));
+  };
+  $('#clrKw').onclick=function(){$('#kwin').value='';};
+  $('#clrFix').onclick=function(){$('#fixin').value='';};
+  $('#copyAll').onclick=function(){
+    if(window._links&&window._links.length){ copyText(window._links.join('\n'),$('#copyAll')); }
+  };
+
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.onclick=function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on')});
+      document.querySelectorAll('.pane').forEach(function(x){x.classList.remove('on')});
+      t.classList.add('on');
+      $('#pane-'+t.dataset.tab).classList.add('on');
+    };
+  });
+})();
+</script>
+</body>
+</html>
