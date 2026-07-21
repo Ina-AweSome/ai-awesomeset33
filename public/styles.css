@@ -126,7 +126,7 @@ main { padding: 0 22px 40px; max-width: 1180px; margin: 0 auto; }
   padding: 3px 9px;
   cursor: pointer;
 }
-.kw-tag::before { content: "🐻 "; }
+.kw-tag::before { content: "# "; opacity: 0.6; }
 
 .mastery { height: 5px; background: var(--line); border-radius: 999px; overflow: hidden; }
 .mastery > span { display: block; height: 100%; background: linear-gradient(90deg, var(--purple), #9d86ff); }
@@ -149,6 +149,10 @@ main { padding: 0 22px 40px; max-width: 1180px; margin: 0 auto; }
   background: #f3f2f8;
   color: var(--muted);
   padding: 12px 16px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .empty { text-align: center; color: var(--muted); padding: 40px; font-size: 15px; }

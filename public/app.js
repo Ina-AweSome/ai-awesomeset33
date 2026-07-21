@@ -8,6 +8,36 @@ const state = {
   showAll: false,
 };
 
+/**
+ * メモの飛び先設定。
+ * GoodNotes は「特定ノート（本日のノート）」を URL で直接開く仕組みを
+ * 公式には持たない（新規作成/インポート系とアプリ起動のみ）。
+ * そのため「本日のノートに確実に飛ばす」には iOS ショートカット経由が現実解。
+ *
+ *   mode: 'goodnotes' … GoodNotes アプリを開く（本日のノートは手動で選択）
+ *   mode: 'shortcut'  … iOS ショートカット経由で本日のノートを開く/追記（推奨）
+ *
+ * ショートカット側で「本日のノートを開く（必要なら input を追記）」を組み、
+ * その名前を shortcutName に設定する。
+ */
+const MEMO = {
+  mode: 'goodnotes',
+  shortcutName: '本日のノート',
+  urlFor(card) {
+    if (this.mode === 'shortcut') {
+      const text = `【${card.title}】\n${card.body}\n#${card.keywords.join(' #')}`;
+      return (
+        'shortcuts://run-shortcut?name=' +
+        encodeURIComponent(this.shortcutName) +
+        '&input=text&text=' +
+        encodeURIComponent(text)
+      );
+    }
+    // GoodNotes アプリを開く（本日のノートは URL で直接指定できない）
+    return 'goodnotes://';
+  },
+};
+
 const el = (id) => document.getElementById(id);
 
 async function api(path, opts) {
@@ -135,9 +165,14 @@ function renderCard(card) {
   good.textContent = done ? '✓ 覚えた' : '▶ これを復習';
   good.addEventListener('click', () => review(card.id, 'good'));
 
-  const memo = document.createElement('button');
+  const memo = document.createElement('a');
   memo.className = 'btn memo';
-  memo.textContent = '🐻 メモ';
+  memo.textContent = '📝 メモ';
+  memo.href = MEMO.urlFor(card);
+  memo.title =
+    MEMO.mode === 'shortcut'
+      ? `ショートカット「${MEMO.shortcutName}」で本日のノートに追記`
+      : 'GoodNotes を開く';
 
   actions.append(again, good, memo);
   wrap.appendChild(actions);
