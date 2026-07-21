@@ -1,0 +1,14 @@
+{
+  "name": "review-server-keyword",
+  "version": "1.0.0",
+  "description": "キーワード中心の復習サーバー（司法試験・法律学習向けの復習フィード）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "license": "MIT"
+}

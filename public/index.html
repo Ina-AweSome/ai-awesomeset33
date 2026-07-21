@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>復習フィード（キーワード中心）</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-icon">📚</span>
+        <div>
+          <h1>復習フィード</h1>
+          <p class="date" id="date"></p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="pill-btn" id="reload" title="再読み込み">↻</button>
+      </div>
+    </header>
+
+    <!-- キーワード主軸のナビ -->
+    <nav class="keyword-bar" id="keyword-bar" aria-label="キーワード"></nav>
+
+    <main>
+      <section class="feed-head">
+        <h2 id="feed-title">おすすめの復習</h2>
+        <label class="toggle">
+          <input type="checkbox" id="all-toggle" />
+          <span>期限外も表示</span>
+        </label>
+      </section>
+      <div class="feed" id="feed"></div>
+      <p class="empty" id="empty" hidden>今復習すべきカードはありません 🎉</p>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
