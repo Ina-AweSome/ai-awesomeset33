@@ -1,0 +1,422 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>復習フィード — 右スワイプで完了</title>
+<style>
+  /* ---- design tokens (mirrors the existing app's look) ---- */
+  :root{
+    --bg1:#efeafb; --bg2:#e7e1f6;
+    --card:#ffffff;
+    --ink:#20203a; --ink-soft:#5a5570; --muted:#9a94ad;
+    --purple:#6c5ce7; --purple-deep:#5a49d6; --purple-tint:#efeafd;
+    --orange1:#ff8a3d; --orange2:#f0483e;
+    --done:#2fb56a; --done-bg:#e6f7ee;
+    --line:#eceaf3;
+    --shadow:0 10px 30px rgba(76,60,140,.12);
+    --radius:22px;
+    --font: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
+            "Hiragino Sans", "Noto Sans JP", "Yu Gothic", Meiryo, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg1:#181428; --bg2:#120f20;
+      --card:#211d33; --ink:#f2f0f8; --ink-soft:#c7c2d8; --muted:#8c86a0;
+      --purple:#8f7cff; --purple-deep:#7a67f0; --purple-tint:#2b2646;
+      --done:#43cf80; --done-bg:#193527; --line:#2c2742;
+      --shadow:0 12px 34px rgba(0,0,0,.45);
+    }
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; height:100%}
+  body{
+    font-family:var(--font); color:var(--ink);
+    background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; min-height:100dvh;
+  }
+
+  /* ---- phone frame ---- */
+  .phone{
+    width:min(408px,100%); height:min(860px,92dvh);
+    background:linear-gradient(180deg,var(--bg1),var(--bg2));
+    border-radius:44px; overflow:hidden; position:relative;
+    box-shadow:var(--shadow), 0 0 0 10px rgba(0,0,0,.06);
+    display:flex; flex-direction:column;
+  }
+  .statusbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 26px 4px; font-weight:700; font-size:15px; color:var(--ink);
+  }
+  .statusbar .right{display:flex; gap:6px; align-items:center; opacity:.85; font-size:13px}
+
+  /* ---- header ---- */
+  header{padding:6px 20px 2px}
+  .titlerow{display:flex; align-items:flex-start; gap:10px}
+  .titlerow .books{font-size:34px; line-height:1; margin-top:2px}
+  .titlerow h1{font-size:26px; font-weight:800; margin:0; letter-spacing:.02em; flex:1}
+  .titlerow .date{font-size:14px; color:var(--muted); font-weight:600; margin-top:4px}
+  .tools{display:flex; gap:8px; margin-top:4px}
+  .tool{
+    width:44px; height:44px; border-radius:14px; background:var(--card);
+    border:none; display:flex; align-items:center; justify-content:center;
+    font-size:19px; box-shadow:0 4px 12px rgba(76,60,140,.10); cursor:pointer;
+  }
+
+  /* ---- progress (達成感) ---- */
+  .progress-wrap{padding:12px 20px 2px}
+  .progress-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
+  .progress-top .lead{font-weight:800; font-size:15px}
+  .progress-top .count{font-size:13px; color:var(--muted); font-weight:700; font-variant-numeric:tabular-nums}
+  .bar{height:9px; border-radius:99px; background:var(--purple-tint); overflow:hidden}
+  .bar > i{
+    display:block; height:100%; width:0%; border-radius:99px;
+    background:linear-gradient(90deg,var(--purple),#9d8bff);
+    transition:width .5s cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* ---- category chips ---- */
+  .chips{display:flex; gap:10px; padding:12px 20px 4px; overflow-x:auto; scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:0 0 auto; padding:11px 20px; border-radius:99px; background:var(--card);
+    font-weight:800; font-size:15px; color:var(--ink-soft); border:none; cursor:pointer;
+    box-shadow:0 3px 10px rgba(76,60,140,.08);
+  }
+  .chip.active{
+    color:#fff; background:linear-gradient(90deg,var(--orange1),var(--orange2));
+    box-shadow:0 6px 16px rgba(240,72,62,.35);
+  }
+
+  /* ---- feed ---- */
+  .feed{flex:1; overflow-y:auto; padding:10px 18px 26px; scrollbar-width:none}
+  .feed::-webkit-scrollbar{display:none}
+
+  .swipe{position:relative; margin:14px 2px; border-radius:var(--radius)}
+  /* green "完了" layer revealed behind the card while swiping right */
+  .swipe .behind{
+    position:absolute; inset:0; border-radius:var(--radius);
+    background:linear-gradient(90deg,var(--done),#37c47c);
+    display:flex; align-items:center; padding-left:28px; gap:10px;
+    color:#fff; font-weight:800; font-size:18px; opacity:0;
+  }
+  .swipe .behind .big{font-size:26px}
+
+  .card{
+    position:relative; background:var(--card); border-radius:var(--radius);
+    padding:18px 18px 16px; box-shadow:var(--shadow);
+    border-left:6px solid var(--cat,var(--purple));
+    touch-action:pan-y; cursor:grab; will-change:transform;
+  }
+  .card:active{cursor:grabbing}
+  .card .row1{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .card .icon{
+    width:52px; height:52px; border-radius:15px; background:var(--purple-tint);
+    display:flex; align-items:center; justify-content:center; font-size:26px;
+  }
+  .card .kind{font-weight:800; color:var(--purple); font-size:16px}
+  .card .badge{
+    margin-left:auto; background:var(--done-bg); color:var(--done);
+    font-weight:800; font-size:13px; padding:5px 11px; border-radius:99px;
+    display:none; align-items:center; gap:4px;
+  }
+  .card.is-done .badge{display:inline-flex}
+  .card h2{font-size:20px; font-weight:800; margin:2px 0 10px; line-height:1.35}
+  .card p{font-size:16px; color:var(--ink-soft); margin:0 0 14px; line-height:1.6}
+  .tag{
+    display:inline-block; padding:8px 14px; border-radius:12px;
+    border:1.5px solid var(--purple-tint); color:var(--purple);
+    font-weight:800; font-size:14px; margin-bottom:14px;
+  }
+  .actions{display:flex; gap:12px}
+  .btn{
+    border:none; border-radius:16px; font-weight:800; font-size:16px; cursor:pointer;
+    padding:15px 16px; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn.again{flex:1; background:var(--purple); color:#fff; box-shadow:0 6px 16px rgba(108,92,231,.35)}
+  .btn.memo{background:var(--card); color:var(--ink-soft); border:1.5px solid var(--line)}
+
+  .hint{
+    text-align:center; color:var(--muted); font-size:13px; font-weight:700;
+    padding:6px 0 2px;
+  }
+  .hint b{color:var(--purple)}
+
+  /* ---- empty / celebration ---- */
+  .empty{
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:10px; padding:60px 30px; color:var(--ink);
+  }
+  .empty.show{display:flex}
+  .empty .emoji{font-size:64px; animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+  .empty h3{font-size:24px; font-weight:800; margin:6px 0 0}
+  .empty p{color:var(--muted); font-weight:600; margin:0}
+  .empty button{
+    margin-top:14px; padding:13px 24px; border-radius:14px; border:none; cursor:pointer;
+    background:var(--purple); color:#fff; font-weight:800; font-size:15px;
+  }
+  @keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+
+  /* ---- undo snackbar (取り消し) ---- */
+  .snackbar{
+    position:absolute; left:16px; right:16px; bottom:20px;
+    background:var(--ink); color:#fff; border-radius:16px;
+    padding:15px 16px; display:flex; align-items:center; gap:12px;
+    box-shadow:0 12px 30px rgba(0,0,0,.3);
+    transform:translateY(140%); opacity:0; transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s;
+    z-index:20; font-weight:700; font-size:15px;
+  }
+  .snackbar.show{transform:translateY(0); opacity:1}
+  .snackbar .txt{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .snackbar button{
+    background:transparent; border:none; color:#ffcf5c; font-weight:800; font-size:15px;
+    cursor:pointer; padding:6px 4px; flex:0 0 auto;
+  }
+  @media (prefers-color-scheme: dark){ .snackbar{background:#000} }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important}
+  }
+</style>
+
+<div class="phone" role="application" aria-label="復習フィード プロトタイプ">
+  <div class="statusbar">
+    <span>20:06</span>
+    <span class="right">••••&nbsp; 🛜&nbsp; 🔋25</span>
+  </div>
+
+  <header>
+    <div class="titlerow">
+      <span class="books" aria-hidden="true">📚</span>
+      <h1>復習フィード</h1>
+      <div class="tools">
+        <button class="tool" title="本">📖</button>
+        <button class="tool" title="ナイトモード">🌙</button>
+        <button class="tool" title="文字サイズ">🅰️</button>
+        <button class="tool" title="リセット" id="resetTop">🔄</button>
+      </div>
+    </div>
+    <div class="date">8/1（土）</div>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span class="lead">今日の復習</span>
+      <span class="count"><b id="doneCount">0</b> / <span id="totalCount">0</span> 完了</span>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+
+  <div class="chips">
+    <button class="chip active">✨ おすすめ</button>
+    <button class="chip">憲法</button>
+    <button class="chip">民法</button>
+    <button class="chip">刑法</button>
+    <button class="chip">商法</button>
+    <button class="chip">行政法</button>
+  </div>
+
+  <div class="hint">復習が終わったカードを <b>右にスワイプ</b> すると完了して消えます 👉</div>
+
+  <div class="feed" id="feed"></div>
+
+  <div class="empty" id="empty">
+    <div class="emoji">🎉</div>
+    <h3>全部完了！</h3>
+    <p>今日の復習、お疲れさまでした。</p>
+    <button id="resetBtn">もう一度はじめる</button>
+  </div>
+
+  <div class="snackbar" id="snackbar">
+    <span class="txt" id="snackText"></span>
+    <button id="undoBtn">取り消す</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---- sample data (matches the app's law-review content) ----
+  const CATS = {
+    "商法":  "#e0894b", "行政法":"#4b9fe0", "民法":"#6c5ce7",
+    "憲法":  "#e05b8a", "刑法":  "#d64b4b", "民訴": "#39b58a"
+  };
+  const DATA = [
+    {cat:"憲法",  kind:"判例", emoji:"⚖️", title:"憲法：二重の基準論",
+     body:"精神的自由の規制は厳格審査、経済的自由は緩やかな審査。表現の自由の優越的地位。", tag:"違憲審査基準"},
+    {cat:"商法",  kind:"コツ", emoji:"💡", title:"商法：剰余金配当の財源規制",
+     body:"分配可能額（461条）超過は違法配当。取締役は連帯返還義務（462条）。", tag:"剰余金配当"},
+    {cat:"行政法",kind:"コツ", emoji:"💡", title:"行政法：取消訴訟の出訴期間",
+     body:"処分を知った日から6か月（14条1項）、処分から1年（同2項）。正当な理由で延長可。徒過は却下事由。", tag:"出訴期間"},
+    {cat:"民法",  kind:"定義", emoji:"📖", title:"民法：即時取得の要件",
+     body:"平穏・公然・善意・無過失で動産を占有取得（192条）。前主の無権利を治癒する制度。", tag:"即時取得"},
+    {cat:"刑法",  kind:"論点", emoji:"🔥", title:"刑法：因果関係（危険の現実化）",
+     body:"実行行為の危険が結果へ現実化したかで判断。介在事情の異常性・寄与度を考慮。", tag:"因果関係"},
+    {cat:"民訴",  kind:"判例", emoji:"⚖️", title:"民訴：既判力の客観的範囲",
+     body:"主文に包含する判断（114条1項）に生じる。理由中の判断には原則及ばない。", tag:"既判力"}
+  ];
+
+  const feed = document.getElementById("feed");
+  const empty = document.getElementById("empty");
+  const barFill = document.getElementById("barFill");
+  const doneCountEl = document.getElementById("doneCount");
+  const totalCountEl = document.getElementById("totalCount");
+  const snackbar = document.getElementById("snackbar");
+  const snackText = document.getElementById("snackText");
+  const undoBtn = document.getElementById("undoBtn");
+
+  const TOTAL = DATA.length;
+  let done = 0;
+  let lastRemoved = null;   // {node, index, data}
+  let snackTimer = null;
+
+  totalCountEl.textContent = TOTAL;
+
+  function updateProgress(){
+    doneCountEl.textContent = done;
+    barFill.style.width = (done / TOTAL * 100) + "%";
+    empty.classList.toggle("show", done >= TOTAL);
+  }
+
+  function makeCard(item, idx){
+    const wrap = document.createElement("div");
+    wrap.className = "swipe";
+    wrap.dataset.idx = idx;
+
+    const behind = document.createElement("div");
+    behind.className = "behind";
+    behind.innerHTML = '<span class="big">✅</span><span>完了！</span>';
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.setProperty("--cat", CATS[item.cat] || "var(--purple)");
+    card.innerHTML = `
+      <div class="row1">
+        <div class="icon">${item.emoji}</div>
+        <span class="kind">${item.kind}</span>
+        <span class="badge">✓ 済</span>
+      </div>
+      <h2>${item.title}</h2>
+      <p>${item.body}</p>
+      <span class="tag">${item.tag}</span>
+      <div class="actions">
+        <button class="btn again">🔁 もう一度</button>
+        <button class="btn memo">🐻 メモ</button>
+      </div>`;
+
+    wrap.append(behind, card);
+    attachSwipe(wrap, card, behind, item);
+    return wrap;
+  }
+
+  function attachSwipe(wrap, card, behind, item){
+    let startX = 0, dx = 0, dragging = false, pid = null;
+    const THRESHOLD = 110;          // px to trigger completion
+    const w = () => wrap.getBoundingClientRect().width;
+
+    const onDown = (e) => {
+      // ignore drags that start on buttons
+      if (e.target.closest("button")) return;
+      dragging = true; pid = e.pointerId;
+      startX = e.clientX; dx = 0;
+      card.style.transition = "none";
+      card.setPointerCapture(pid);
+    };
+    const onMove = (e) => {
+      if (!dragging) return;
+      dx = e.clientX - startX;
+      if (dx < 0) dx = dx * 0.25;   // resist leftward; right swipe is the action
+      card.style.transform = `translateX(${dx}px) rotate(${dx*0.02}deg)`;
+      behind.style.opacity = Math.min(dx / THRESHOLD, 1);
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      card.style.transition = "transform .28s cubic-bezier(.2,.8,.2,1)";
+      if (dx > THRESHOLD){
+        complete(wrap, card, behind, item);
+      } else {
+        card.style.transform = "translateX(0)";
+        behind.style.opacity = 0;
+      }
+    };
+    card.addEventListener("pointerdown", onDown);
+    card.addEventListener("pointermove", onMove);
+    card.addEventListener("pointerup", onUp);
+    card.addEventListener("pointercancel", onUp);
+
+    // tapping もう一度 also lets you re-review; メモ is a no-op stub
+    card.querySelector(".again").addEventListener("click", () =>
+      flash(card, "🔁 復習キューに戻しました"));
+  }
+
+  function complete(wrap, card, behind, item){
+    card.classList.add("is-done");
+    behind.style.opacity = 1;
+    card.style.transform = `translateX(${wrap.getBoundingClientRect().width + 40}px) rotate(6deg)`;
+    // remember position for undo
+    const index = Array.prototype.indexOf.call(feed.children, wrap);
+    setTimeout(() => {
+      wrap.style.transition = "height .25s ease, margin .25s ease, opacity .2s";
+      wrap.style.height = wrap.offsetHeight + "px";
+      requestAnimationFrame(() => {
+        wrap.style.height = "0px";
+        wrap.style.margin = "0 2px";
+        wrap.style.opacity = "0";
+      });
+      setTimeout(() => {
+        lastRemoved = {index, item};
+        wrap.remove();
+        done++;
+        updateProgress();
+        showSnack(item.title);
+      }, 250);
+    }, 280);
+  }
+
+  function showSnack(title){
+    const short = title.length > 16 ? title.slice(0,16) + "…" : title;
+    snackText.textContent = `「${short}」を完了にしました`;
+    snackbar.classList.add("show");
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(() => snackbar.classList.remove("show"), 4000);
+  }
+
+  undoBtn.addEventListener("click", () => {
+    if (!lastRemoved) return;
+    const {index, item} = lastRemoved;
+    lastRemoved = null;
+    snackbar.classList.remove("show");
+    done = Math.max(0, done - 1);
+    updateProgress();
+    const node = makeCard(item, index);
+    node.style.opacity = "0";
+    const ref = feed.children[index] || null;
+    feed.insertBefore(node, ref);
+    requestAnimationFrame(() => { node.style.transition="opacity .3s"; node.style.opacity="1"; });
+    node.scrollIntoView({behavior:"smooth", block:"center"});
+  });
+
+  function flash(card, msg){
+    const t = document.createElement("div");
+    t.textContent = msg;
+    Object.assign(t.style,{
+      position:"absolute", top:"10px", left:"50%", transform:"translateX(-50%)",
+      background:"var(--purple)", color:"#fff", padding:"7px 14px", borderRadius:"10px",
+      fontWeight:"800", fontSize:"13px", zIndex:5, whiteSpace:"nowrap",
+      boxShadow:"0 6px 16px rgba(108,92,231,.4)"
+    });
+    card.appendChild(t);
+    setTimeout(()=>t.remove(), 1200);
+  }
+
+  function build(){
+    feed.innerHTML = "";
+    DATA.forEach((item, i) => feed.appendChild(makeCard(item, i)));
+    done = 0;
+    updateProgress();
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", build);
+  document.getElementById("resetTop").addEventListener("click", build);
+
+  build();
+})();
+</script>
