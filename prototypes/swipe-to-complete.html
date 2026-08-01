@@ -185,6 +185,28 @@
   .sheet .cancel{background:var(--line); color:var(--ink-soft)}
   .sheet .save{background:var(--purple); color:#fff}
 
+  /* ---- large screens (iPad / desktop): fill the screen, multi-column feed ---- */
+  @media (min-width: 760px){
+    body{ padding:0; }
+    .phone{
+      width:100vw; height:100dvh; max-width:none;
+      border-radius:0; box-shadow:none;
+    }
+    .statusbar{ display:none; }                 /* real device already shows one */
+    header, .progress-wrap, .chips, .hint{
+      max-width:1180px; margin-left:auto; margin-right:auto; width:100%;
+    }
+    header{ padding-top:16px; }
+    .feed{
+      max-width:1180px; margin:0 auto; width:100%;
+      display:grid; align-content:start;
+      grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
+      gap:18px;
+    }
+    .swipe{ margin:0; }
+    .snackbar{ left:24px; right:auto; width:min(440px, 60vw); }
+  }
+
   @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
 </style>
 
