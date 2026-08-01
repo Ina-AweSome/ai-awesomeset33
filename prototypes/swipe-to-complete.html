@@ -42,35 +42,38 @@
   }
   .statusbar{ display:none; }   /* the real device already shows a status bar */
 
-  header{padding:calc(env(safe-area-inset-top,0px) + 12px) 18px 2px}
-  .titlerow{display:flex; align-items:center; gap:10px}
-  .titlerow .books{font-size:30px; line-height:1; flex:0 0 auto}
-  .titlerow h1{
-    font-size:clamp(21px,5.6vw,26px); font-weight:800; margin:0; letter-spacing:.01em;
-    flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
-  }
-  .date{font-size:14px; color:var(--muted); font-weight:600; margin-top:2px; padding-left:2px}
-  .tools{display:flex; gap:8px; flex:0 0 auto}
-  .tool{
-    width:42px; height:42px; border-radius:13px; background:var(--card);
-    border:none; display:flex; align-items:center; justify-content:center;
-    font-size:19px; box-shadow:0 4px 12px rgba(76,60,140,.10); cursor:pointer;
-  }
-  /* on phones the decorative tool buttons crowd the title — keep only reset */
-  @media (max-width:600px){ .tools .tool.deco{ display:none; } }
+  /* scroll container: everything scrolls, only the chips bar sticks */
+  .scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
 
-  .progress-wrap{padding:12px 20px 2px}
-  .progress-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
-  .progress-top .lead{font-weight:800; font-size:15px}
-  .progress-top .count{font-size:13px; color:var(--muted); font-weight:700; font-variant-numeric:tabular-nums}
-  .bar{height:9px; border-radius:99px; background:var(--purple-tint); overflow:hidden}
+  header{padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 0}
+  .titlerow{display:flex; align-items:center; gap:10px}
+  .titlerow .books{font-size:26px; line-height:1; flex:0 0 auto}
+  .titleblock{flex:1; min-width:0}
+  .titleblock h1{
+    font-size:clamp(19px,5vw,24px); font-weight:800; margin:0; letter-spacing:.01em;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .titleblock .date{font-size:12px; color:var(--muted); font-weight:600; margin-top:1px}
+  .tool{
+    width:38px; height:38px; border-radius:12px; background:var(--card);
+    border:none; display:flex; align-items:center; justify-content:center;
+    font-size:18px; box-shadow:0 4px 12px rgba(76,60,140,.10); cursor:pointer; flex:0 0 auto;
+  }
+
+  .progress-line{display:flex; align-items:center; gap:10px; margin-top:9px}
+  .bar{flex:1; height:8px; border-radius:99px; background:var(--purple-tint); overflow:hidden}
   .bar > i{
     display:block; height:100%; width:0%; border-radius:99px;
     background:linear-gradient(90deg,var(--purple),#9d8bff);
     transition:width .5s cubic-bezier(.2,.8,.2,1);
   }
+  .progress-line .count{font-size:12px; color:var(--muted); font-weight:800;
+    font-variant-numeric:tabular-nums; flex:0 0 auto}
 
-  .chips{display:flex; gap:10px; padding:12px 20px 4px; overflow-x:auto; scrollbar-width:none}
+  .chips{display:flex; gap:8px; padding:10px 16px; overflow-x:auto; scrollbar-width:none;
+    position:sticky; top:0; z-index:6; background:var(--bg1);
+    box-shadow:0 6px 10px -8px rgba(76,60,140,.35)}
   .chips::-webkit-scrollbar{display:none}
   .chip{
     flex:0 0 auto; padding:11px 20px; border-radius:99px; background:var(--card);
@@ -82,9 +85,7 @@
     box-shadow:0 6px 16px rgba(240,72,62,.35);
   }
 
-  .feed{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
-        padding:8px 16px calc(env(safe-area-inset-bottom,0px) + 96px); scrollbar-width:none}
-  .feed::-webkit-scrollbar{display:none}
+  .feed{padding:10px 16px calc(env(safe-area-inset-bottom,0px) + 96px)}
 
   .swipe{position:relative; margin:14px 2px; border-radius:var(--radius)}
   .swipe .behind{
@@ -110,21 +111,34 @@
   .card .kind{font-weight:800; color:var(--purple); font-size:16px}
   .card .catlabel{font-size:12px; color:var(--muted); font-weight:700; margin-left:2px}
   .card h2{font-size:20px; font-weight:800; margin:2px 0 10px; line-height:1.35}
-  .card p{font-size:16px; color:var(--ink-soft); margin:0 0 14px; line-height:1.6}
+  .card p.answer{font-size:16px; color:var(--ink-soft); margin:0 0 14px; line-height:1.6;
+    transition:filter .15s}
+  /* 暗記モード: answer hidden until tapped */
+  .card.quiz p.answer{filter:blur(7px); user-select:none; pointer-events:none}
+  .card .reveal{display:none; width:100%; margin:0 0 14px; padding:11px 12px; border:none;
+    border-radius:12px; font-family:inherit;
+    background:var(--purple-tint); color:var(--purple); font-weight:800; font-size:14px; cursor:pointer;
+    text-align:center}
+  .card.quiz .reveal{display:block}
+
   .tag{
-    display:inline-block; padding:8px 14px; border-radius:12px;
-    border:1.5px solid var(--purple-tint); color:var(--purple);
-    font-weight:800; font-size:14px; margin-bottom:14px;
+    display:inline-block; padding:8px 14px; border-radius:12px; font-family:inherit;
+    border:1.5px solid var(--purple-tint); color:var(--purple); background:transparent;
+    font-weight:800; font-size:14px; margin-bottom:14px; cursor:pointer;
   }
+  .tag::after{content:" ⧉"; font-size:13px; opacity:.55}
+  .tag:active{background:var(--purple-tint)}
+
   .actions{display:flex; gap:12px}
   .btn{
     border:none; border-radius:16px; font-weight:800; font-size:16px; cursor:pointer;
     padding:15px 16px; display:flex; align-items:center; justify-content:center; gap:8px;
   }
-  .btn.again{flex:1; background:var(--purple); color:#fff; box-shadow:0 6px 16px rgba(108,92,231,.35)}
-  .btn.memo{background:var(--card); color:var(--ink-soft); border:1.5px solid var(--line)}
+  .btn.recall{flex:1; background:var(--purple); color:#fff; box-shadow:0 6px 16px rgba(108,92,231,.35)}
+  .btn.copy{background:var(--card); color:var(--ink-soft); border:1.5px solid var(--line)}
 
-  .hint{text-align:center; color:var(--muted); font-size:13px; font-weight:700; padding:6px 0 2px}
+  .hint{text-align:center; color:var(--muted); font-size:12px; font-weight:700; padding:8px 16px 0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .hint b{color:var(--purple)}
 
   .empty{
@@ -194,13 +208,13 @@
       width:100vw; height:100dvh; max-width:none;
       border-radius:0; box-shadow:none;
     }
-    .statusbar{ display:none; }                 /* real device already shows one */
-    header, .progress-wrap, .chips, .hint{
+    header, .hint, .feed{
       max-width:1180px; margin-left:auto; margin-right:auto; width:100%;
     }
     header{ padding-top:16px; }
+    .chips{ padding-left:max(16px, calc((100% - 1180px)/2 + 16px));
+            padding-right:max(16px, calc((100% - 1180px)/2 + 16px)); }
     .feed{
-      max-width:1180px; margin:0 auto; width:100%;
       display:grid; align-content:start;
       grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
       gap:18px;
@@ -218,39 +232,34 @@
     <span class="right">••••&nbsp; 🛜&nbsp; 🔋25</span>
   </div>
 
-  <header>
-    <div class="titlerow">
-      <span class="books" aria-hidden="true">📚</span>
-      <h1>復習フィード</h1>
-      <div class="tools">
-        <button class="tool deco" title="本">📖</button>
-        <button class="tool deco" title="ナイトモード">🌙</button>
-        <button class="tool deco" title="文字サイズ">🅰️</button>
+  <div class="scroll" id="scroll">
+    <header>
+      <div class="titlerow">
+        <span class="books" aria-hidden="true">📚</span>
+        <div class="titleblock">
+          <h1>復習フィード</h1>
+          <div class="date" id="today">8/1（土）</div>
+        </div>
         <button class="tool" title="全部戻す" id="resetTop">🔄</button>
       </div>
+      <div class="progress-line">
+        <div class="bar"><i id="barFill"></i></div>
+        <span class="count"><b id="doneCount">0</b>/<span id="totalCount">0</span></span>
+      </div>
+    </header>
+
+    <div class="chips" id="chips"></div>
+
+    <div class="hint">終わったら <b>右にスワイプ</b> で完了 👉　🧠隠して暗記・📋コピー</div>
+
+    <div class="feed" id="feed"></div>
+
+    <div class="empty" id="empty">
+      <div class="emoji">🎉</div>
+      <h3 id="emptyTitle">全部完了！</h3>
+      <p id="emptyMsg">今日の復習、お疲れさまでした。</p>
+      <button id="resetBtn">また全部表示する</button>
     </div>
-    <div class="date" id="today">8/1（土）</div>
-  </header>
-
-  <div class="progress-wrap">
-    <div class="progress-top">
-      <span class="lead">今日の復習</span>
-      <span class="count"><b id="doneCount">0</b> / <span id="totalCount">0</span> 完了</span>
-    </div>
-    <div class="bar"><i id="barFill"></i></div>
-  </div>
-
-  <div class="chips" id="chips"></div>
-
-  <div class="hint">終わったら <b>右にスワイプ</b> で完了 👉</div>
-
-  <div class="feed" id="feed"></div>
-
-  <div class="empty" id="empty">
-    <div class="emoji">🎉</div>
-    <h3 id="emptyTitle">全部完了！</h3>
-    <p id="emptyMsg">今日の復習、お疲れさまでした。</p>
-    <button id="resetBtn">また全部表示する</button>
   </div>
 
   <button class="fab" id="addFab" title="復習項目を追加">＋</button>
@@ -393,20 +402,59 @@
         <span class="catlabel">${item.cat}</span>
       </div>
       <h2></h2>
-      <p></p>
-      ${item.tag ? '<span class="tag"></span>' : ""}
+      <p class="answer"></p>
+      <button type="button" class="reveal">🤔 思い出せた？ タップで答えを表示</button>
+      ${item.tag ? '<button type="button" class="tag" title="キーワードをコピー"></button>' : ""}
       <div class="actions">
-        <button class="btn again">🔁 もう一度</button>
-        <button class="btn memo">🐻 メモ</button>
+        <button class="btn recall">🧠 答えを隠す</button>
+        <button class="btn copy">📋 コピー</button>
       </div>`;
     card.querySelector("h2").textContent = item.title;
-    card.querySelector("p").textContent = item.body;
-    if (item.tag) card.querySelector(".tag").textContent = item.tag;
+    card.querySelector(".answer").textContent = item.body;
+
+    // 暗記モード: hide answer for active recall
+    const recallBtn = card.querySelector(".recall");
+    const reveal = card.querySelector(".reveal");
+    const setQuiz = (on) => {
+      card.classList.toggle("quiz", on);
+      recallBtn.textContent = on ? "🙈 答えを表示" : "🧠 答えを隠す";
+    };
+    recallBtn.addEventListener("click", () => setQuiz(!card.classList.contains("quiz")));
+    reveal.addEventListener("click", () => setQuiz(false));
+
+    // copy the whole card as a study note
+    card.querySelector(".copy").addEventListener("click", () => {
+      const text = `【${item.cat}】${item.title}\n${item.body}` + (item.tag ? `\n#${item.tag}` : "");
+      copyText(text, () => flash(card, "📋 コピーしました"));
+    });
+
+    // copy just the keyword
+    const tagEl = card.querySelector(".tag");
+    if (tagEl){
+      tagEl.textContent = item.tag;
+      tagEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        copyText(item.tag, () => flash(card, `「${item.tag}」をコピー`));
+      });
+    }
 
     wrap.append(behind, card);
     attachSwipe(wrap, card, behind, item);
-    card.querySelector(".again").addEventListener("click", () => flash(card, "🔁 復習キューに戻しました"));
     return wrap;
+  }
+
+  // clipboard with a fallback for sandboxed iframes
+  function copyText(text, done){
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand("copy"); } catch(e){}
+      ta.remove(); done && done();
+    };
+    if (navigator.clipboard && window.isSecureContext){
+      navigator.clipboard.writeText(text).then(() => done && done(), fallback);
+    } else fallback();
   }
 
   function attachSwipe(wrap, card, behind, item){
@@ -521,7 +569,7 @@
     closeSheet();
     if (filter !== "おすすめ" && filter !== cat){ filter = cat; renderChips(); }
     render();
-    feed.scrollTop = 0;
+    $("scroll").scrollTop = 0;
   });
 
   renderChips();
