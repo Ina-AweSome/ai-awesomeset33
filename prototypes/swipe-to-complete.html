@@ -2,7 +2,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>復習フィード — 右スワイプで完了</title>
 <style>
-  /* ---- design tokens (mirrors the existing app's look) ---- */
   :root{
     --bg1:#efeafb; --bg2:#e7e1f6;
     --card:#ffffff;
@@ -34,7 +33,6 @@
     padding:20px; min-height:100dvh;
   }
 
-  /* ---- phone frame ---- */
   .phone{
     width:min(408px,100%); height:min(860px,92dvh);
     background:linear-gradient(180deg,var(--bg1),var(--bg2));
@@ -48,12 +46,11 @@
   }
   .statusbar .right{display:flex; gap:6px; align-items:center; opacity:.85; font-size:13px}
 
-  /* ---- header ---- */
   header{padding:6px 20px 2px}
   .titlerow{display:flex; align-items:flex-start; gap:10px}
   .titlerow .books{font-size:34px; line-height:1; margin-top:2px}
   .titlerow h1{font-size:26px; font-weight:800; margin:0; letter-spacing:.02em; flex:1}
-  .titlerow .date{font-size:14px; color:var(--muted); font-weight:600; margin-top:4px}
+  .date{font-size:14px; color:var(--muted); font-weight:600; margin-top:4px}
   .tools{display:flex; gap:8px; margin-top:4px}
   .tool{
     width:44px; height:44px; border-radius:14px; background:var(--card);
@@ -61,7 +58,6 @@
     font-size:19px; box-shadow:0 4px 12px rgba(76,60,140,.10); cursor:pointer;
   }
 
-  /* ---- progress (達成感) ---- */
   .progress-wrap{padding:12px 20px 2px}
   .progress-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
   .progress-top .lead{font-weight:800; font-size:15px}
@@ -73,7 +69,6 @@
     transition:width .5s cubic-bezier(.2,.8,.2,1);
   }
 
-  /* ---- category chips ---- */
   .chips{display:flex; gap:10px; padding:12px 20px 4px; overflow-x:auto; scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
   .chip{
@@ -86,12 +81,10 @@
     box-shadow:0 6px 16px rgba(240,72,62,.35);
   }
 
-  /* ---- feed ---- */
   .feed{flex:1; overflow-y:auto; padding:10px 18px 26px; scrollbar-width:none}
   .feed::-webkit-scrollbar{display:none}
 
   .swipe{position:relative; margin:14px 2px; border-radius:var(--radius)}
-  /* green "完了" layer revealed behind the card while swiping right */
   .swipe .behind{
     position:absolute; inset:0; border-radius:var(--radius);
     background:linear-gradient(90deg,var(--done),#37c47c);
@@ -113,12 +106,7 @@
     display:flex; align-items:center; justify-content:center; font-size:26px;
   }
   .card .kind{font-weight:800; color:var(--purple); font-size:16px}
-  .card .badge{
-    margin-left:auto; background:var(--done-bg); color:var(--done);
-    font-weight:800; font-size:13px; padding:5px 11px; border-radius:99px;
-    display:none; align-items:center; gap:4px;
-  }
-  .card.is-done .badge{display:inline-flex}
+  .card .catlabel{font-size:12px; color:var(--muted); font-weight:700; margin-left:2px}
   .card h2{font-size:20px; font-weight:800; margin:2px 0 10px; line-height:1.35}
   .card p{font-size:16px; color:var(--ink-soft); margin:0 0 14px; line-height:1.6}
   .tag{
@@ -134,16 +122,12 @@
   .btn.again{flex:1; background:var(--purple); color:#fff; box-shadow:0 6px 16px rgba(108,92,231,.35)}
   .btn.memo{background:var(--card); color:var(--ink-soft); border:1.5px solid var(--line)}
 
-  .hint{
-    text-align:center; color:var(--muted); font-size:13px; font-weight:700;
-    padding:6px 0 2px;
-  }
+  .hint{text-align:center; color:var(--muted); font-size:13px; font-weight:700; padding:6px 0 2px}
   .hint b{color:var(--purple)}
 
-  /* ---- empty / celebration ---- */
   .empty{
     display:none; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; gap:10px; padding:60px 30px; color:var(--ink);
+    text-align:center; gap:10px; padding:50px 30px; color:var(--ink);
   }
   .empty.show{display:flex}
   .empty .emoji{font-size:64px; animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
@@ -155,13 +139,19 @@
   }
   @keyframes pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
 
-  /* ---- undo snackbar (取り消し) ---- */
+  .fab{
+    position:absolute; right:18px; bottom:20px; width:58px; height:58px; border-radius:50%;
+    background:var(--purple); color:#fff; font-size:30px; border:none; cursor:pointer;
+    box-shadow:0 10px 24px rgba(108,92,231,.5); z-index:15; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+
   .snackbar{
-    position:absolute; left:16px; right:16px; bottom:20px;
+    position:absolute; left:16px; right:86px; bottom:24px;
     background:var(--ink); color:#fff; border-radius:16px;
     padding:15px 16px; display:flex; align-items:center; gap:12px;
     box-shadow:0 12px 30px rgba(0,0,0,.3);
-    transform:translateY(140%); opacity:0; transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s;
+    transform:translateY(160%); opacity:0; transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s;
     z-index:20; font-weight:700; font-size:15px;
   }
   .snackbar.show{transform:translateY(0); opacity:1}
@@ -172,9 +162,30 @@
   }
   @media (prefers-color-scheme: dark){ .snackbar{background:#000} }
 
-  @media (prefers-reduced-motion: reduce){
-    *{transition:none !important; animation:none !important}
+  /* add-card sheet */
+  .sheet-bg{
+    position:absolute; inset:0; background:rgba(20,16,40,.45); z-index:30;
+    display:none; align-items:flex-end;
   }
+  .sheet-bg.show{display:flex}
+  .sheet{
+    width:100%; background:var(--card); border-radius:24px 24px 0 0; padding:20px 20px 24px;
+    transform:translateY(100%); transition:transform .3s cubic-bezier(.2,.8,.2,1);
+    max-height:88%; overflow-y:auto;
+  }
+  .sheet-bg.show .sheet{transform:translateY(0)}
+  .sheet h3{margin:0 0 14px; font-size:19px; font-weight:800}
+  .sheet label{display:block; font-size:13px; font-weight:800; color:var(--ink-soft); margin:12px 0 6px}
+  .sheet input, .sheet textarea, .sheet select{
+    width:100%; border:1.5px solid var(--line); border-radius:12px; padding:12px 14px;
+    font-size:15px; font-family:inherit; background:var(--bg1); color:var(--ink); resize:vertical;
+  }
+  .sheet .rowbtns{display:flex; gap:10px; margin-top:18px}
+  .sheet .rowbtns button{flex:1; padding:14px; border-radius:14px; border:none; font-weight:800; font-size:15px; cursor:pointer}
+  .sheet .cancel{background:var(--line); color:var(--ink-soft)}
+  .sheet .save{background:var(--purple); color:#fff}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
 </style>
 
 <div class="phone" role="application" aria-label="復習フィード プロトタイプ">
@@ -191,10 +202,10 @@
         <button class="tool" title="本">📖</button>
         <button class="tool" title="ナイトモード">🌙</button>
         <button class="tool" title="文字サイズ">🅰️</button>
-        <button class="tool" title="リセット" id="resetTop">🔄</button>
+        <button class="tool" title="全部戻す" id="resetTop">🔄</button>
       </div>
     </div>
-    <div class="date">8/1（土）</div>
+    <div class="date" id="today">8/1（土）</div>
   </header>
 
   <div class="progress-wrap">
@@ -205,80 +216,144 @@
     <div class="bar"><i id="barFill"></i></div>
   </div>
 
-  <div class="chips">
-    <button class="chip active">✨ おすすめ</button>
-    <button class="chip">憲法</button>
-    <button class="chip">民法</button>
-    <button class="chip">刑法</button>
-    <button class="chip">商法</button>
-    <button class="chip">行政法</button>
-  </div>
+  <div class="chips" id="chips"></div>
 
-  <div class="hint">復習が終わったカードを <b>右にスワイプ</b> すると完了して消えます 👉</div>
+  <div class="hint">終わったカードを <b>右にスワイプ</b> すると完了して消えます 👉</div>
 
   <div class="feed" id="feed"></div>
 
   <div class="empty" id="empty">
     <div class="emoji">🎉</div>
-    <h3>全部完了！</h3>
-    <p>今日の復習、お疲れさまでした。</p>
-    <button id="resetBtn">もう一度はじめる</button>
+    <h3 id="emptyTitle">全部完了！</h3>
+    <p id="emptyMsg">今日の復習、お疲れさまでした。</p>
+    <button id="resetBtn">また全部表示する</button>
   </div>
+
+  <button class="fab" id="addFab" title="復習項目を追加">＋</button>
 
   <div class="snackbar" id="snackbar">
     <span class="txt" id="snackText"></span>
     <button id="undoBtn">取り消す</button>
   </div>
+
+  <!-- add-card sheet -->
+  <div class="sheet-bg" id="sheetBg">
+    <div class="sheet" role="dialog" aria-label="復習項目を追加">
+      <h3>復習項目を追加</h3>
+      <label>カテゴリ</label>
+      <select id="fCat"></select>
+      <label>タイトル</label>
+      <input id="fTitle" placeholder="例）民法：即時取得の要件" maxlength="40">
+      <label>内容</label>
+      <textarea id="fBody" rows="3" placeholder="覚えておきたいポイントを書きます"></textarea>
+      <label>タグ（任意）</label>
+      <input id="fTag" placeholder="例）即時取得" maxlength="20">
+      <div class="rowbtns">
+        <button class="cancel" id="sheetCancel">キャンセル</button>
+        <button class="save" id="sheetSave">追加する</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 (() => {
-  // ---- sample data (matches the app's law-review content) ----
   const CATS = {
-    "商法":  "#e0894b", "行政法":"#4b9fe0", "民法":"#6c5ce7",
-    "憲法":  "#e05b8a", "刑法":  "#d64b4b", "民訴": "#39b58a"
+    "憲法":  {color:"#e05b8a", kind:"判例", emoji:"⚖️"},
+    "民法":  {color:"#6c5ce7", kind:"定義", emoji:"📖"},
+    "刑法":  {color:"#d64b4b", kind:"論点", emoji:"🔥"},
+    "商法":  {color:"#e0894b", kind:"コツ", emoji:"💡"},
+    "行政法":{color:"#4b9fe0", kind:"コツ", emoji:"💡"},
+    "民訴":  {color:"#39b58a", kind:"判例", emoji:"⚖️"}
   };
-  const DATA = [
-    {cat:"憲法",  kind:"判例", emoji:"⚖️", title:"憲法：二重の基準論",
+  const CAT_ORDER = ["おすすめ", ...Object.keys(CATS)];
+
+  const SEED = [
+    {id:"s1", cat:"憲法",  kind:"判例", emoji:"⚖️", title:"憲法：二重の基準論",
      body:"精神的自由の規制は厳格審査、経済的自由は緩やかな審査。表現の自由の優越的地位。", tag:"違憲審査基準"},
-    {cat:"商法",  kind:"コツ", emoji:"💡", title:"商法：剰余金配当の財源規制",
+    {id:"s2", cat:"商法",  kind:"コツ", emoji:"💡", title:"商法：剰余金配当の財源規制",
      body:"分配可能額（461条）超過は違法配当。取締役は連帯返還義務（462条）。", tag:"剰余金配当"},
-    {cat:"行政法",kind:"コツ", emoji:"💡", title:"行政法：取消訴訟の出訴期間",
+    {id:"s3", cat:"行政法",kind:"コツ", emoji:"💡", title:"行政法：取消訴訟の出訴期間",
      body:"処分を知った日から6か月（14条1項）、処分から1年（同2項）。正当な理由で延長可。徒過は却下事由。", tag:"出訴期間"},
-    {cat:"民法",  kind:"定義", emoji:"📖", title:"民法：即時取得の要件",
+    {id:"s4", cat:"民法",  kind:"定義", emoji:"📖", title:"民法：即時取得の要件",
      body:"平穏・公然・善意・無過失で動産を占有取得（192条）。前主の無権利を治癒する制度。", tag:"即時取得"},
-    {cat:"刑法",  kind:"論点", emoji:"🔥", title:"刑法：因果関係（危険の現実化）",
+    {id:"s5", cat:"刑法",  kind:"論点", emoji:"🔥", title:"刑法：因果関係（危険の現実化）",
      body:"実行行為の危険が結果へ現実化したかで判断。介在事情の異常性・寄与度を考慮。", tag:"因果関係"},
-    {cat:"民訴",  kind:"判例", emoji:"⚖️", title:"民訴：既判力の客観的範囲",
+    {id:"s6", cat:"民訴",  kind:"判例", emoji:"⚖️", title:"民訴：既判力の客観的範囲",
      body:"主文に包含する判断（114条1項）に生じる。理由中の判断には原則及ばない。", tag:"既判力"}
   ];
 
-  const feed = document.getElementById("feed");
-  const empty = document.getElementById("empty");
-  const barFill = document.getElementById("barFill");
-  const doneCountEl = document.getElementById("doneCount");
-  const totalCountEl = document.getElementById("totalCount");
-  const snackbar = document.getElementById("snackbar");
-  const snackText = document.getElementById("snackText");
-  const undoBtn = document.getElementById("undoBtn");
+  const KEY = "fukushu-feed-v1";
+  const load = () => {
+    try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.cards) return s; }catch(e){}
+    return {cards: SEED.map(c => ({...c, done:false}))};
+  };
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  let state = load();
 
-  const TOTAL = DATA.length;
-  let done = 0;
-  let lastRemoved = null;   // {node, index, data}
+  let filter = "おすすめ";
+  let lastAction = null;      // {id} for undo
   let snackTimer = null;
 
-  totalCountEl.textContent = TOTAL;
+  const $ = (id) => document.getElementById(id);
+  const feed = $("feed"), empty = $("empty"), chipsEl = $("chips");
+  const barFill = $("barFill"), doneCountEl = $("doneCount"), totalCountEl = $("totalCount");
+  const snackbar = $("snackbar"), snackText = $("snackText");
 
-  function updateProgress(){
-    doneCountEl.textContent = done;
-    barFill.style.width = (done / TOTAL * 100) + "%";
-    empty.classList.toggle("show", done >= TOTAL);
+  // ---- date ----
+  (() => {
+    const d = new Date();
+    const wd = "日月火水木金土"[d.getDay()];
+    $("today").textContent = `${d.getMonth()+1}/${d.getDate()}（${wd}）`;
+  })();
+
+  // ---- chips ----
+  function renderChips(){
+    chipsEl.innerHTML = "";
+    CAT_ORDER.forEach(name => {
+      const b = document.createElement("button");
+      b.className = "chip" + (name === filter ? " active" : "");
+      b.textContent = name === "おすすめ" ? "✨ おすすめ" : name;
+      b.addEventListener("click", () => { filter = name; renderChips(); render(); });
+      chipsEl.appendChild(b);
+    });
   }
 
-  function makeCard(item, idx){
+  function visibleCards(){
+    return state.cards.filter(c => !c.done && (filter === "おすすめ" || c.cat === filter));
+  }
+
+  function updateProgress(){
+    const total = state.cards.length;
+    const done = state.cards.filter(c => c.done).length;
+    totalCountEl.textContent = total;
+    doneCountEl.textContent = done;
+    barFill.style.width = total ? (done/total*100) + "%" : "0%";
+  }
+
+  function render(){
+    feed.innerHTML = "";
+    const list = visibleCards();
+    list.forEach(item => feed.appendChild(makeCard(item)));
+    updateProgress();
+
+    const allDone = state.cards.length > 0 && state.cards.every(c => c.done);
+    if (allDone){
+      $("emptyTitle").textContent = "全部完了！";
+      $("emptyMsg").textContent = "今日の復習、お疲れさまでした。";
+      empty.classList.add("show");
+    } else if (list.length === 0){
+      $("emptyTitle").textContent = "このカテゴリは完了！";
+      $("emptyMsg").textContent = "他のカテゴリを見るか、＋で追加できます。";
+      empty.classList.add("show");
+    } else {
+      empty.classList.remove("show");
+    }
+  }
+
+  function makeCard(item){
     const wrap = document.createElement("div");
-    wrap.className = "swipe";
-    wrap.dataset.idx = idx;
+    wrap.className = "swipe"; wrap.dataset.id = item.id;
 
     const behind = document.createElement("div");
     behind.className = "behind";
@@ -286,137 +361,146 @@
 
     const card = document.createElement("div");
     card.className = "card";
-    card.style.setProperty("--cat", CATS[item.cat] || "var(--purple)");
+    card.style.setProperty("--cat", (CATS[item.cat]?.color) || "var(--purple)");
     card.innerHTML = `
       <div class="row1">
-        <div class="icon">${item.emoji}</div>
-        <span class="kind">${item.kind}</span>
-        <span class="badge">✓ 済</span>
+        <div class="icon">${item.emoji || "📝"}</div>
+        <span class="kind">${item.kind || "メモ"}</span>
+        <span class="catlabel">${item.cat}</span>
       </div>
-      <h2>${item.title}</h2>
-      <p>${item.body}</p>
-      <span class="tag">${item.tag}</span>
+      <h2></h2>
+      <p></p>
+      ${item.tag ? '<span class="tag"></span>' : ""}
       <div class="actions">
         <button class="btn again">🔁 もう一度</button>
         <button class="btn memo">🐻 メモ</button>
       </div>`;
+    card.querySelector("h2").textContent = item.title;
+    card.querySelector("p").textContent = item.body;
+    if (item.tag) card.querySelector(".tag").textContent = item.tag;
 
     wrap.append(behind, card);
     attachSwipe(wrap, card, behind, item);
+    card.querySelector(".again").addEventListener("click", () => flash(card, "🔁 復習キューに戻しました"));
     return wrap;
   }
 
   function attachSwipe(wrap, card, behind, item){
-    let startX = 0, dx = 0, dragging = false, pid = null;
-    const THRESHOLD = 110;          // px to trigger completion
-    const w = () => wrap.getBoundingClientRect().width;
-
+    let startX=0, dx=0, dragging=false, pid=null;
+    const THRESHOLD = 110;
     const onDown = (e) => {
-      // ignore drags that start on buttons
       if (e.target.closest("button")) return;
-      dragging = true; pid = e.pointerId;
-      startX = e.clientX; dx = 0;
-      card.style.transition = "none";
-      card.setPointerCapture(pid);
+      dragging=true; pid=e.pointerId; startX=e.clientX; dx=0;
+      card.style.transition="none"; card.setPointerCapture(pid);
     };
     const onMove = (e) => {
-      if (!dragging) return;
+      if(!dragging) return;
       dx = e.clientX - startX;
-      if (dx < 0) dx = dx * 0.25;   // resist leftward; right swipe is the action
+      if (dx < 0) dx *= 0.25;
       card.style.transform = `translateX(${dx}px) rotate(${dx*0.02}deg)`;
       behind.style.opacity = Math.min(dx / THRESHOLD, 1);
     };
     const onUp = () => {
-      if (!dragging) return;
-      dragging = false;
-      card.style.transition = "transform .28s cubic-bezier(.2,.8,.2,1)";
-      if (dx > THRESHOLD){
-        complete(wrap, card, behind, item);
-      } else {
-        card.style.transform = "translateX(0)";
-        behind.style.opacity = 0;
-      }
+      if(!dragging) return; dragging=false;
+      card.style.transition="transform .28s cubic-bezier(.2,.8,.2,1)";
+      if (dx > THRESHOLD) complete(wrap, card, behind, item);
+      else { card.style.transform="translateX(0)"; behind.style.opacity=0; }
     };
     card.addEventListener("pointerdown", onDown);
     card.addEventListener("pointermove", onMove);
     card.addEventListener("pointerup", onUp);
     card.addEventListener("pointercancel", onUp);
-
-    // tapping もう一度 also lets you re-review; メモ is a no-op stub
-    card.querySelector(".again").addEventListener("click", () =>
-      flash(card, "🔁 復習キューに戻しました"));
   }
 
   function complete(wrap, card, behind, item){
-    card.classList.add("is-done");
-    behind.style.opacity = 1;
+    behind.style.opacity=1;
     card.style.transform = `translateX(${wrap.getBoundingClientRect().width + 40}px) rotate(6deg)`;
-    // remember position for undo
-    const index = Array.prototype.indexOf.call(feed.children, wrap);
     setTimeout(() => {
-      wrap.style.transition = "height .25s ease, margin .25s ease, opacity .2s";
+      wrap.style.transition="height .25s ease, margin .25s ease, opacity .2s";
       wrap.style.height = wrap.offsetHeight + "px";
-      requestAnimationFrame(() => {
-        wrap.style.height = "0px";
-        wrap.style.margin = "0 2px";
-        wrap.style.opacity = "0";
-      });
+      requestAnimationFrame(() => { wrap.style.height="0px"; wrap.style.margin="0 2px"; wrap.style.opacity="0"; });
       setTimeout(() => {
-        lastRemoved = {index, item};
-        wrap.remove();
-        done++;
-        updateProgress();
-        showSnack(item.title);
+        const c = state.cards.find(c => c.id === item.id);
+        if (c) c.done = true;
+        lastAction = {id:item.id};
+        save(); render(); showSnack(item.title);
       }, 250);
     }, 280);
   }
 
   function showSnack(title){
-    const short = title.length > 16 ? title.slice(0,16) + "…" : title;
+    const short = title.length > 14 ? title.slice(0,14) + "…" : title;
     snackText.textContent = `「${short}」を完了にしました`;
     snackbar.classList.add("show");
     clearTimeout(snackTimer);
     snackTimer = setTimeout(() => snackbar.classList.remove("show"), 4000);
   }
 
-  undoBtn.addEventListener("click", () => {
-    if (!lastRemoved) return;
-    const {index, item} = lastRemoved;
-    lastRemoved = null;
+  $("undoBtn").addEventListener("click", () => {
+    if(!lastAction) return;
+    const c = state.cards.find(c => c.id === lastAction.id);
+    if (c) c.done = false;
+    lastAction = null;
     snackbar.classList.remove("show");
-    done = Math.max(0, done - 1);
-    updateProgress();
-    const node = makeCard(item, index);
-    node.style.opacity = "0";
-    const ref = feed.children[index] || null;
-    feed.insertBefore(node, ref);
-    requestAnimationFrame(() => { node.style.transition="opacity .3s"; node.style.opacity="1"; });
-    node.scrollIntoView({behavior:"smooth", block:"center"});
+    save(); render();
   });
 
   function flash(card, msg){
     const t = document.createElement("div");
     t.textContent = msg;
-    Object.assign(t.style,{
-      position:"absolute", top:"10px", left:"50%", transform:"translateX(-50%)",
+    Object.assign(t.style,{position:"absolute", top:"10px", left:"50%", transform:"translateX(-50%)",
       background:"var(--purple)", color:"#fff", padding:"7px 14px", borderRadius:"10px",
       fontWeight:"800", fontSize:"13px", zIndex:5, whiteSpace:"nowrap",
-      boxShadow:"0 6px 16px rgba(108,92,231,.4)"
-    });
+      boxShadow:"0 6px 16px rgba(108,92,231,.4)"});
     card.appendChild(t);
     setTimeout(()=>t.remove(), 1200);
   }
 
-  function build(){
-    feed.innerHTML = "";
-    DATA.forEach((item, i) => feed.appendChild(makeCard(item, i)));
-    done = 0;
-    updateProgress();
+  // ---- reset (bring all back) ----
+  function resetAll(){
+    state.cards.forEach(c => c.done = false);
+    save(); render();
   }
+  $("resetBtn").addEventListener("click", resetAll);
+  $("resetTop").addEventListener("click", resetAll);
 
-  document.getElementById("resetBtn").addEventListener("click", build);
-  document.getElementById("resetTop").addEventListener("click", build);
+  // ---- add-card sheet ----
+  const sheetBg = $("sheetBg");
+  (function initCatSelect(){
+    const sel = $("fCat");
+    Object.keys(CATS).forEach(name => {
+      const o = document.createElement("option"); o.value=name; o.textContent=name; sel.appendChild(o);
+    });
+  })();
+  function openSheet(){
+    if (filter !== "おすすめ") $("fCat").value = filter;
+    sheetBg.classList.add("show");
+    setTimeout(()=>$("fTitle").focus(), 300);
+  }
+  function closeSheet(){ sheetBg.classList.remove("show"); }
+  $("addFab").addEventListener("click", openSheet);
+  $("sheetCancel").addEventListener("click", closeSheet);
+  sheetBg.addEventListener("click", (e) => { if (e.target === sheetBg) closeSheet(); });
+  $("sheetSave").addEventListener("click", () => {
+    const title = $("fTitle").value.trim();
+    const body  = $("fBody").value.trim();
+    if (!title){ $("fTitle").focus(); return; }
+    const cat = $("fCat").value;
+    const meta = CATS[cat] || {};
+    state.cards.unshift({
+      id: "u" + Date.now(),
+      cat, kind: meta.kind || "メモ", emoji: meta.emoji || "📝",
+      title, body: body || "（内容なし）", tag: $("fTag").value.trim(), done:false
+    });
+    save();
+    $("fTitle").value = ""; $("fBody").value = ""; $("fTag").value = "";
+    closeSheet();
+    if (filter !== "おすすめ" && filter !== cat){ filter = cat; renderChips(); }
+    render();
+    feed.scrollTop = 0;
+  });
 
-  build();
+  renderChips();
+  render();
 })();
 </script>
